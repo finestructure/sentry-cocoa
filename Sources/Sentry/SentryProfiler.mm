@@ -278,6 +278,7 @@ serializedSamplesWithRelativeTimestamps(
             SENTRY_LOG_WARN(@"Filtered sample not chronological with transaction.");
             return;
         }
+        // can any of the objects be nil? that's not allowed. doesn't appear so
         const auto dict = [NSMutableDictionary dictionaryWithDictionary:@ {
             @"elapsed_since_start_ns" : serializedUnsigned64BitInteger(
                 getDurationNs(transaction.startSystemTime, sample.absoluteTimestamp)),

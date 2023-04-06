@@ -74,18 +74,21 @@ SentrySpan ()
 - (void)setDataValue:(nullable id)value forKey:(NSString *)key
 {
     @synchronized(_data) {
+        // key is a nonnull argument but can it still be nil here?
         [_data setValue:value forKey:key];
     }
 }
 
 - (void)setExtraValue:(nullable id)value forKey:(NSString *)key
 {
+    // key is a nonnull argument but can it still be nil?
     [self setDataValue:value forKey:key];
 }
 
 - (void)removeDataForKey:(NSString *)key
 {
     @synchronized(_data) {
+        // key is a nonnull argument but can it still be nil?
         [_data removeObjectForKey:key];
     }
 }
@@ -100,6 +103,7 @@ SentrySpan ()
 - (void)setTagValue:(NSString *)value forKey:(NSString *)key
 {
     @synchronized(_tags) {
+        // key is a nonnull argument but can it still be nil?
         [_tags setValue:value forKey:key];
     }
 }
@@ -107,6 +111,7 @@ SentrySpan ()
 - (void)removeTagForKey:(NSString *)key
 {
     @synchronized(_tags) {
+        // key is a nonnull argument but can it still be nil?
         [_tags removeObjectForKey:key];
     }
 }

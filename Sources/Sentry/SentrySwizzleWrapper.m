@@ -32,6 +32,7 @@ static NSMutableDictionary<NSString *, SentrySwizzleSendActionCallback>
 - (void)swizzleSendAction:(SentrySwizzleSendActionCallback)callback forKey:(NSString *)key
 {
     // We need to make a copy of the block to avoid ARC of autoreleasing it.
+    // can key be nil here? no: it's always called with a static constant
     sentrySwizzleSendActionCallbacks[key] = [callback copy];
     SENTRY_LOG_DEBUG(@"Swizzling sendAction for %@", key);
 

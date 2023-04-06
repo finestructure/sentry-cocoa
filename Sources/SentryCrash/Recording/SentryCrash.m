@@ -227,6 +227,8 @@ getBasePath(void)
     if (fakeEvent.System.A)                                                                        \
     dict[@ #A] = [NSString stringWithUTF8String:fakeEvent.System.A]
 #define COPY_PRIMITIVE(A) dict[@ #A] = @(fakeEvent.System.A)
+    // these are all used as keys in a dict, if any are nil, this will crash. they only appear to be
+    // hydrated into the System struct if g_isEnabled is true in SentryCrashMonitor_System.
     COPY_STRING(systemName);
     COPY_STRING(systemVersion);
     COPY_STRING(machine);

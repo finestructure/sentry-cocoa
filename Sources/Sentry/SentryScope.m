@@ -215,6 +215,44 @@ SentryScope ()
 - (void)setContextValue:(NSDictionary<NSString *, id> *)value forKey:(NSString *)key
 {
     @synchronized(_contextDictionary) {
+        // key is a nonnull argument but can it still be nil here?
+        /*
+         the following test proves you can still send nil to a nonnull argument and not even get a
+         compiler warning:
+
+         @interface Foo : NSObject
+
+         - (void)bar:(NSObject *_Nonnull)baz;
+
+         @end
+
+         @implementation Foo
+
+         - (void)bar:(NSObject *)baz {
+             if (baz == nil) {
+                 @throw [NSException exceptionWithName:@"can't receive nil" reason:nil
+         userInfo:nil];
+             }
+         }
+
+         @end
+
+         ... in an XCTest ...
+
+         - (void)testSendingNilToNonnullParameter {
+             Foo *a = [[Foo alloc] init];
+             BOOL threw = NO;
+             @try {
+                 NSObject *b = nil;
+                 [a bar:b]; // this should be illegal, but no warning/error
+             } @catch (NSException *e) {
+                 XCTAssertNotNil(e);
+                 threw = YES;
+             } @finally {
+                 XCTAssert(threw);
+             }
+         }
+         */
         [_contextDictionary setValue:value forKey:key];
 
         for (id<SentryScopeObserver> observer in self.observers) {
@@ -226,6 +264,8 @@ SentryScope ()
 - (void)removeContextForKey:(NSString *)key
 {
     @synchronized(_contextDictionary) {
+        // key is a nonnull argument but can it still be nil here? if so this will throw an
+        // exception
         [_contextDictionary removeObjectForKey:key];
 
         for (id<SentryScopeObserver> observer in self.observers) {
@@ -287,6 +327,7 @@ SentryScope ()
 - (void)setTagValue:(NSString *)value forKey:(NSString *)key
 {
     @synchronized(_tagDictionary) {
+        // can key be nil here? yes it's in a nonnull region but still...
         _tagDictionary[key] = value;
 
         for (id<SentryScopeObserver> observer in self.observers) {

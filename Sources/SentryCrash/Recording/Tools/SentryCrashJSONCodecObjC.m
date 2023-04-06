@@ -182,8 +182,13 @@ onElement(SentryCrashJSONCodec *codec, NSString *name, id element)
     }
 
     if ([codec->_currentContainer isKindOfClass:[NSMutableDictionary class]]) {
+        // can name be nil here? yes, if the cString passed to stringFromCString is NULL.
+        // decodeElement is called with a NULL in some places, but it's very hard to trace all the
+        // codepaths since it's recursive
         [(NSMutableDictionary *)codec->_currentContainer setValue:element forKey:name];
     } else {
+        // should we check for the legal types of json members here? from the docs: NSString,
+        // NSNumber, NSArray, NSDictionary, or NSNull
         [(NSMutableArray *)codec->_currentContainer addObject:element];
     }
     return SentryCrashJSON_OK;

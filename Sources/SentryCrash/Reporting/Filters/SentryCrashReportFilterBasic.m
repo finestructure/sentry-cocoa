@@ -177,6 +177,8 @@ SentryCrashReportFilterCombine ()
                 NSArray *reportSet = [reportSets objectAtIndex:iSet];
                 if (reportSet.count > iReport) {
                     NSDictionary *report = [reportSet objectAtIndex:iReport];
+                    // is it possible for keys to be nil? it's technically not declared in a nonnull
+                    // region
                     [dict setObject:report forKey:[keys objectAtIndex:iSet]];
                 }
             }
@@ -471,6 +473,7 @@ SentryCrashReportFilterSubset ()
                                        description:@"Report did not have key path %@", keyPath]);
                 return;
             }
+            // is it possible for keypath to be nil here? no, can't have a nil in an array
             [subset setObject:object forKey:[keyPath lastPathComponent]];
         }
         [filteredReports addObject:subset];

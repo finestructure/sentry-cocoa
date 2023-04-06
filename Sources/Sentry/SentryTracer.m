@@ -401,6 +401,8 @@ static BOOL appStartMeasurementRead;
 - (void)setMeasurement:(NSString *)name value:(NSNumber *)value
 {
     SentryMeasurementValue *measurement = [[SentryMeasurementValue alloc] initWithValue:value];
+    // can name be nil here? doesn't look like it because it's currently only called with either
+    // string literals or one place where a nil check is performed, but still...
     _measurements[name] = measurement;
 }
 
@@ -408,6 +410,7 @@ static BOOL appStartMeasurementRead;
 {
     SentryMeasurementValue *measurement = [[SentryMeasurementValue alloc] initWithValue:value
                                                                                    unit:unit];
+    // can name be nil here? same as above note
     _measurements[name] = measurement;
 }
 
@@ -773,6 +776,8 @@ static BOOL appStartMeasurementRead;
             NSString *appStartType = appStartMeasurement.isPreWarmed
                 ? [NSString stringWithFormat:@"%@.prewarmed", appContextType]
                 : appContextType;
+            // context is declared as nullable in SentryEvent.h, but it's legal to pass nil to
+            // initWithDictionary, it doesn't throw an exception, so this is fine
             NSMutableDictionary *context =
                 [[NSMutableDictionary alloc] initWithDictionary:[transaction context]];
             NSDictionary *appContext = @{ @"app" : @ { @"start_type" : appStartType } };

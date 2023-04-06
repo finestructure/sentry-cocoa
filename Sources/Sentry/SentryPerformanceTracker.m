@@ -93,6 +93,8 @@ SentryPerformanceTracker () <SentryTracerDelegate>
 
     if (spanId != nil) {
         @synchronized(self.spans) {
+            // do we need another nil check after synchronization? what if the active span finishes
+            // before sync completes?
             self.spans[spanId] = newSpan;
         }
     } else {

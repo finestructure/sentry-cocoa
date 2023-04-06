@@ -413,6 +413,8 @@ SentryMetricKitIntegration ()
             [self extractDebugMetaFromMXFrames:callStack.flattenedRootFrames];
 
         for (SentryDebugMeta *debugMeta in callStackDebugMetas) {
+            // debugID is declared as nullable, need to nil check it here? no: it comes from the
+            // source in the below note
             debugMetas[debugMeta.debugID] = debugMeta;
         }
     }
@@ -440,6 +442,8 @@ SentryMetricKitIntegration ()
         NSNumber *imageAddress = @(mxFrame.address - mxFrame.offsetIntoBinaryTextSegment);
         debugMeta.imageAddress = sentry_formatHexAddress(imageAddress);
 
+        // debugID is declared as nullable, need to nil check it here? no: we set it above from a
+        // nonnull source
         debugMetas[debugMeta.debugID] = debugMeta;
     }
 

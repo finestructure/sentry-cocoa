@@ -856,6 +856,7 @@ NSString *const DropSessionLogMessage = @"Session has no release name. Won't sen
         ? [[NSMutableDictionary alloc] init]
         : [[NSMutableDictionary alloc] initWithDictionary:context[key]];
     block(dict);
+    // can key still be nil here? no: this method is currently only called with string literals
     context[key] = dict;
     event.context = context;
 }

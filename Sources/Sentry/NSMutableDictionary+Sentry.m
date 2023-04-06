@@ -20,6 +20,8 @@ NSMutableDictionary (Sentry)
 
 - (void)setBoolValue:(nullable NSNumber *)value forKey:(NSString *)key
 {
+    // why do we declare value to be nullable if we won't do anything here? should we remove that
+    // value from the dictionary if it's nil?
     if (value != nil) {
         [self setValue:@([value boolValue]) forKey:key];
     }
