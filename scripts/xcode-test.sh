@@ -65,10 +65,14 @@ if [ $PLATFORM == "iOS" -a $OS == "12.4" ]; then
         -destination "$DESTINATION" \
         -skip-testing:"SentryTests/SentrySDKTests/testMemoryFootprintOfAddingBreadcrumbs" \
         -skip-testing:"SentryTests/SentrySDKTests/testMemoryFootprintOfTransactions" \
-        test | tee raw-test-output.log | $RUBY_ENV_ARGS xcpretty -t && slather coverage --configuration $CONFIGURATION && exit ${PIPESTATUS[0]}
+        test | tee raw-test-output.log | $RUBY_ENV_ARGS xcpretty -t && exit ${PIPESTATUS[0]}
 else
-    env NSUnbufferedIO=YES xcodebuild -workspace Sentry.xcworkspace \
-        -scheme Sentry -configuration $CONFIGURATION \
-        -destination "$DESTINATION" \
-        test | tee raw-test-output.log | $RUBY_ENV_ARGS xcpretty -t && slather coverage --configuration $CONFIGURATION && exit ${PIPESTATUS[0]}
+    git bisect start
+    git bisect good HEAD~1000
+    git bisect bad HEAD
+    git bisect run \
+        env NSUnbufferedIO=YES xcodebuild -workspace Sentry.xcworkspace \
+            -scheme Sentry -configuration $CONFIGURATION \
+            -destination "$DESTINATION" \
+            test | tee raw-test-output.log | $RUBY_ENV_ARGS xcpretty -t && exit ${PIPESTATUS[0]}
 fi
