@@ -100,15 +100,20 @@ processBacktrace(const Backtrace &backtrace,
         threadMetadata[threadID] = metadata;
     }
     if (!backtrace.threadMetadata.name.empty() && metadata[@"name"] == nil) {
-        metadata[@"name"] = [NSString stringWithUTF8String:backtrace.threadMetadata.name.c_str()];
+        const auto name = [NSString stringWithUTF8String:backtrace.threadMetadata.name.c_str()];
+        if (name != nil) {
+            metadata[@"name"] = name;
+        }
     }
     if (backtrace.threadMetadata.priority != -1 && metadata[@"priority"] == nil) {
         metadata[@"priority"] = @(backtrace.threadMetadata.priority);
     }
     if (queueAddress != nil && queueMetadata[queueAddress] == nil
         && backtrace.queueMetadata.label != nullptr) {
-        queueMetadata[queueAddress] =
-            @ { @"label" : [NSString stringWithUTF8String:backtrace.queueMetadata.label->c_str()] };
+        const auto label = [NSString stringWithUTF8String:backtrace.queueMetadata.label->c_str()];
+        if (label != nil) {
+            queueMetadata[queueAddress] = @ { @"label" : label };
+        }
     }
 #    if defined(DEBUG)
     const auto symbols
@@ -121,6 +126,10 @@ processBacktrace(const Backtrace &backtrace,
          backtraceAddressIdx < backtrace.addresses.size(); backtraceAddressIdx++) {
         const auto instructionAddress
             = sentry_formatHexAddressUInt64(backtrace.addresses[backtraceAddressIdx]);
+        if (instructionAddress == nil) {
+            SENTRY_LOG_WARN(@"Failed to convert instruction address to string value");
+            continue;
+        }
 
         const auto frameIndex = frameIndexLookup[instructionAddress];
         if (frameIndex == nil) {
@@ -219,16 +228,32 @@ sliceGPUData(SentryFrameInfoTimeSeries *frameInfo, SentryTransaction *transactio
         }
         const auto relativeTimestamp = getDurationNs(transaction.startSystemTime, timestamp);
 
+        const auto elapsed = sentry_stringForUInt64(relativeTimestamp);
+        if (elapsed == nil) {
+            SENTRY_LOG_WARN(@"Failed to convert the relative timestamp to a string value.");
+            return;
+        }
+
+        const auto value = obj[@"value"];
+        if (value == nil) {
+            SENTRY_LOG_WARN(@"Expected a value for the GPU data being sliced.");
+            return;
+        }
+
         [slicedGPUEntries addObject:@ {
-            @"elapsed_since_start_ns" : sentry_stringForUInt64(relativeTimestamp),
-            @"value" : obj[@"value"],
+            @"elapsed_since_start_ns" : elapsed,
+            @"value" : value,
         }];
     }];
     if (useMostRecentRecording && slicedGPUEntries.count == 0) {
-        [slicedGPUEntries addObject:@ {
-            @"elapsed_since_start_ns" : @"0",
-            @"value" : nearestPredecessorValue,
-        }];
+        if (nearestPredecessorValue == nil) {
+            SENTRY_LOG_WARN(@"Need at least one value but found none.");
+        } else {
+            [slicedGPUEntries addObject:@ {
+                @"elapsed_since_start_ns" : @"0",
+                @"value" : nearestPredecessorValue,
+            }];
+        }
     }
     return slicedGPUEntries;
 }
@@ -249,10 +274,23 @@ serializedSamplesWithRelativeTimestamps(
             SENTRY_LOG_WARN(@"Filtered sample not chronological with transaction.");
             return;
         }
+
+        const auto elapsed = sentry_stringForUInt64(
+            getDurationNs(transaction.startSystemTime, sample.absoluteTimestamp));
+        if (elapsed == nil) {
+            SENTRY_LOG_WARN(@"Could not convert elapsed time to string.");
+            return;
+        }
+
+        const auto threadID = sentry_stringForUInt64(sample.threadID);
+        if (threadID == nil) {
+            SENTRY_LOG_WARN(@"Could not convert thread ID to string.");
+            return;
+        }
+
         const auto dict = [NSMutableDictionary dictionaryWithDictionary:@ {
-            @"elapsed_since_start_ns" : sentry_stringForUInt64(
-                getDurationNs(transaction.startSystemTime, sample.absoluteTimestamp)),
-            @"thread_id" : sentry_stringForUInt64(sample.threadID),
+            @"elapsed_since_start_ns" : elapsed,
+            @"thread_id" : threadID,
             @"stack_id" : sample.stackIndex,
         }];
         if (sample.queueAddress) {
