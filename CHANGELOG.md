@@ -26,7 +26,7 @@ This change has no impact on grouping of the issues in Sentry.
 ### Fixes 
 
 - Propagate span when copying scope (#2952)
-- Prevent crashes in profiler when adding potentially `nil` references to dictionaries (#2995)
+- Prevent potential crashes in profiler by nil-checking object references added to dictionaries (#2995)
 
 ## 8.6.0
 
